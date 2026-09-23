@@ -43,10 +43,24 @@ const RAW_LABEL = { es: 'Así lo escribirías vos', en: 'How you’d normally wr
 const POLISHED_LABEL = { es: 'Así te lo deja EzWrite', en: 'What EzWrite gives you' };
 const FREE_NOTE = { es: 'Gratis, sin tarjeta, sin crear cuenta', en: 'Free, no card, no account needed' };
 const CTA_BTN = { es: 'Probar con mi propio mensaje', en: 'Try it with my own message' };
+const SWITCH_LANG_LABEL = { es: 'Read in English →', en: 'Leer en español →' };
+const RELATED_LABEL = { es: 'Otras situaciones', en: 'Other situations' };
 
 export default function SituacionPage({ page }) {
   const { data, lang } = page;
   const back = BACK_LABEL[lang];
+  const situacion = situaciones.find((s) => s.id === page.id);
+  const otherLang = lang === 'es' ? 'en' : 'es';
+  const otherLangEntry = situacion ? situacion[otherLang] : null;
+  const switchLangLabel = SWITCH_LANG_LABEL[lang];
+  const relatedLabel = RELATED_LABEL[lang];
+  const relatedPages = situaciones
+    .filter((s) => s.category === page.category && s.id !== page.id)
+    .slice(0, 3)
+    .map((s) => s[lang]);
+  const canonicalUrl = 'https://ezwrite.app/' + data.slug;
+  const esUrl = situacion ? 'https://ezwrite.app/' + situacion.es.slug : canonicalUrl;
+  const enUrl = situacion ? 'https://ezwrite.app/' + situacion.en.slug : canonicalUrl;
   const rawLabel = RAW_LABEL[lang];
   const polishedLabel = POLISHED_LABEL[lang];
   const freeNote = FREE_NOTE[lang];
@@ -62,6 +76,10 @@ export default function SituacionPage({ page }) {
         <meta property="og:title" content={data.title} />
         <meta property="og:description" content={data.meta} />
         <meta property="og:type" content="article" />
+        <link rel="canonical" href={canonicalUrl} />
+        <link rel="alternate" hrefLang="es" href={esUrl} />
+        <link rel="alternate" hrefLang="en" href={enUrl} />
+        <link rel="alternate" hrefLang="x-default" href={esUrl} />
       </Head>
       <div style={{ maxWidth: '640px', margin: '0 auto', paddingTop: '2.5rem', paddingBottom: '4.5rem' }}>
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: 600, color: C.TEXT2, textDecoration: 'none', marginBottom: '2rem' }}>
@@ -116,6 +134,31 @@ export default function SituacionPage({ page }) {
           <div style={{ marginTop: '10px', fontSize: '12px', fontWeight: 500, color: C.TEXT3 }}>{freeNote}</div>
         </div>
 
+        {(otherLangEntry || relatedPages.length > 0) && (
+          <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid ' + C.BORDER }}>
+            {otherLangEntry && (
+              <div style={{ marginBottom: relatedPages.length > 0 ? '16px' : 0, textAlign: 'center' }}>
+                <Link href={'/' + otherLangEntry.slug} style={{ fontSize: '13px', fontWeight: 600, color: C.ACCENT, textDecoration: 'none' }}>
+                  {switchLangLabel}
+                </Link>
+              </div>
+            )}
+            {relatedPages.length > 0 && (
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.TEXT3, marginBottom: '10px', textAlign: 'center' }}>
+                  {relatedLabel}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center' }}>
+                  {relatedPages.map((r) => (
+                    <Link key={r.slug} href={'/' + r.slug} style={{ fontSize: '12.5px', color: C.TEXT2, textDecoration: 'none', padding: '5px 10px', borderRadius: '6px', border: '1px solid ' + C.BORDER }}>
+                      {(r.title || '').replace(' | EzWrite', '')}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid ' + C.BORDER, textAlign: 'center', fontSize: '12px', color: C.TEXT3 }}>
           Made with <span style={{ color: C.ACCENT, fontWeight: 700 }}>EzWrite</span>
         </div>
