@@ -18,6 +18,7 @@ var CASE_CATEGORIES = [
   { key: 'Idiomas', label: { Espanol: 'Otros idiomas', English: 'Other languages', Portugues: 'Outros idiomas' } },
 ];
 var CASE_USES_HEADING = { Espanol: 'Casos de uso', English: 'Use cases', Portugues: 'Casos de uso' };
+var FEATURED_CASE_IDS = ['pedir-aumento', 'factura-impaga', 'rechazar-propuesta', 'disculpa-cliente', 'cliente-en-otro-idioma'];
 
 // Variantes regionales disponibles por idioma de salida. 'AUTO' (chip
 // implícito, sin código) detecta por IP en el backend; cada código acá
@@ -127,6 +128,10 @@ historyLabel: 'History',
 historyEmpty: 'No messages yet',
 historyUse: 'View again',
 historyClear: 'Clear history',
+caseUseIntro: 'Need help with something specific?',
+caseUseSub: 'Some of the most requested messages:',
+caseUseShowAll: 'See all 20 use cases',
+caseUseHide: 'Hide use cases',
 versionLabel: 'Version',
 variantLabel: 'Variant',
 variantAuto: 'Automatic',
@@ -180,6 +185,10 @@ historyLabel: 'Historial',
 historyEmpty: 'Todavía no hay mensajes',
 historyUse: 'Ver de nuevo',
 historyClear: 'Borrar historial',
+caseUseIntro: '¿Buscás ayuda con algo puntual?',
+caseUseSub: 'Algunos de los mensajes más pedidos:',
+caseUseShowAll: 'Ver los 20 casos de uso',
+caseUseHide: 'Ocultar casos de uso',
 versionLabel: 'Versión',
 variantLabel: 'Variante',
 variantAuto: 'Automática',
@@ -233,6 +242,10 @@ historyLabel: 'Historico',
 historyEmpty: 'Ainda nao ha mensagens',
 historyUse: 'Ver novamente',
 historyClear: 'Limpar historico',
+caseUseIntro: 'Precisa de ajuda com algo específico?',
+caseUseSub: 'Algumas das mensagens mais pedidas:',
+caseUseShowAll: 'Ver os 20 casos de uso',
+caseUseHide: 'Ocultar casos de uso',
 versionLabel: 'Versão',
 variantLabel: 'Variante',
 variantAuto: 'Automática',
@@ -298,6 +311,7 @@ var s30 = useState(false); var linkCopied = s30[0]; var setLinkCopied = s30[1];
 var s31 = useState(''); var dialectOverride = s31[0]; var setDialectOverride = s31[1];
 var s32 = useState(false); var showRecipientPicker = s32[0]; var setShowRecipientPicker = s32[1];
 var s33 = useState(false); var showVariantPicker = s33[0]; var setShowVariantPicker = s33[1];
+var s34 = useState(false); var showAllCases = s34[0]; var setShowAllCases = s34[1];
 
 var posthog = usePostHog();
 var t = UI[uiLang] || UI['English'];
@@ -686,7 +700,27 @@ return (<button className="ez-collapsible-toggle" onClick={function() { setShowV
 {versions && (<div className="ph-no-capture"><div style={{ height: '1px', background: C.BORDER, margin: '2rem 0' }}></div>{versions.map(function(v, idx) { var color = VERSION_COLORS[idx] || C.ACCENT; var isCopied = copied === idx; return (<div key={idx} className="ez-card ez-result-card" style={{ background: C.SURFACE, border: '1px solid '+C.BORDER, borderLeft: '3px solid '+color, borderRadius: '14px', padding: '18px', marginBottom: '14px', boxShadow: C.SHADOW, animationDelay: (idx*80)+'ms' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}><span style={{ fontSize: '12px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', background: color+'22', color: color }}>{t.versionLabel} {v.label}</span><button className="ez-copy-btn" data-copied={isCopied} onClick={function() { handleCopy(v.text, idx); }} style={{ fontSize: '12px', fontWeight: 500, padding: '5px 12px', borderRadius: '6px', border: isCopied ? '1px solid '+C.GREEN : '1px solid '+C.BORDER, background: isCopied ? C.GREEN_LIGHT : 'transparent', cursor: 'pointer', color: isCopied ? C.GREEN : C.TEXT2, fontFamily: inter.style.fontFamily, display: 'flex', alignItems: 'center', gap: '4px' }}>{isCopied && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}{isCopied ? t.copied : t.copy}</button></div><p onCopy={function() { if (posthog) posthog.capture('result_copied', { version: idx + 1, method: 'manual_selection' }); }} style={{ fontSize: '15px', lineHeight: 1.7, color: isDark ? C.TEXT2 : C.TEXT, margin: 0, whiteSpace: 'pre-wrap' }}>{v.text}</p></div>); })}</div>)}
 {userId && versions && (<div className="ez-card" style={{ marginTop: '1.5rem', padding: '20px', borderRadius: '14px', background: C.ACCENT_SOFT, border: '1px solid '+C.ACCENT_BORDER, textAlign: 'center' }}><div style={{ fontSize: '13px', fontWeight: 600, color: C.TEXT, marginBottom: '6px' }}>{t.shareMsg}</div><div style={{ marginBottom: '14px' }}>{[0,1,2,3,4].map(function(i) { var filled = referralCount > 0 && (i < referralCount % 5 || (referralCount % 5 === 0 && i < 5)); return (<span key={i} style={{ fontSize: '22px', color: filled ? C.GREEN : C.TEXT3 }}>{filled ? '●' : '○'}</span>); })}<span style={{ fontSize: '12px', color: C.TEXT2, marginLeft: '10px' }}>{t.shareProgress(referralCount % 5 === 0 && referralCount > 0 ? 5 : referralCount % 5)}</span></div><div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}><button onClick={function() { var url = 'https://ezwrite.app?ref='+userId; var msg = 'Probá EzWrite gratis — la IA que te da 3 versiones pulidas de cualquier mensaje: ' + url; if (posthog) posthog.capture('referral_shared');
 window.open('https://wa.me/?text='+encodeURIComponent(msg), '_blank'); }} style={{ padding: '11px 28px', background: C.GREEN, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', fontFamily: inter.style.fontFamily, display: 'inline-flex', alignItems: 'center', gap: '8px' }}><svg width='16' height='16' viewBox='0 0 24 24' fill='white'><path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z'/></svg> {t.shareBtn}</button><button onClick={handleCopyLink} style={{ padding: '11px 20px', background: 'transparent', color: linkCopied ? C.GREEN : C.TEXT2, border: '1px solid '+(linkCopied ? C.GREEN : C.BORDER_STRONG), borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', fontFamily: inter.style.fontFamily, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>{linkCopied ? (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>) : (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>)} {linkCopied ? t.linkCopiedLabel : t.copyLinkBtn}</button></div>{bonusGen > 0 && (<div style={{ fontSize: '12px', color: C.GREEN, marginTop: '10px', fontWeight: 500 }}>+{bonusGen} {uiLang === 'Espanol' ? 'generaciones extra desbloqueadas' : uiLang === 'Portugues' ? 'gerações extras desbloqueadas' : 'extra generations unlocked'}</div>)}</div>)}
-<div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid '+C.BORDER }}><div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: C.TEXT3, marginBottom: '14px', textAlign: 'center' }}>{CASE_USES_HEADING[uiLang] || CASE_USES_HEADING.English}</div>{CASE_CATEGORIES.map(function(cat) {var items = situaciones.filter(function(s) { return s.category === cat.key; });if (!items.length) return null;return (<div key={cat.key} style={{ marginBottom: '14px' }}><div style={{ fontSize: '11px', fontWeight: 600, color: C.TEXT3, marginBottom: '7px' }}>{cat.label[uiLang] || cat.label.English}</div><div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>{items.map(function(s) {var entry = uiLang === 'English' ? s.en : s.es;var label = (entry.title || '').replace(' | EzWrite', '');return (<a key={s.id} href={'/'+entry.slug} style={{ fontSize: '12.5px', color: C.TEXT2, textDecoration: 'none', padding: '5px 10px', borderRadius: '6px', border: '1px solid '+C.BORDER }}>{label}</a>);})}</div></div>);})}</div><div style={{ marginTop: '2.2rem', paddingTop: '1.5rem', borderTop: '1px solid '+C.BORDER, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: '8px', rowGap: '6px', fontSize: '12px', color: C.TEXT3 }}><span style={{ whiteSpace: 'nowrap' }}>Made with <span style={{ color: C.ACCENT, fontWeight: 700 }}>EzWrite</span></span><span style={{ whiteSpace: 'nowrap' }}><span style={{ opacity: 0.4, marginRight: '8px' }}>·</span>Powered by <span style={{ color: '#E86A2D', fontWeight: 600 }}>Claude</span></span><span style={{ whiteSpace: 'nowrap' }}><span style={{ opacity: 0.4, marginRight: '8px' }}>·</span><a href="/blog" style={{ color: C.TEXT3, textDecoration: 'underline' }}>Blog</a></span><span style={{ whiteSpace: 'nowrap' }}><span style={{ opacity: 0.4, marginRight: '8px' }}>·</span><a href="/privacidad" style={{ color: C.TEXT3, textDecoration: 'underline' }}>{uiLang === 'Espanol' ? 'Privacidad' : uiLang === 'Portugues' ? 'Privacidade' : 'Privacy'}</a></span><span style={{ whiteSpace: 'nowrap' }}><span style={{ opacity: 0.4, marginRight: '8px' }}>·</span><a href="/press" style={{ color: C.TEXT3, textDecoration: 'underline' }}>{uiLang === 'Espanol' ? 'Prensa' : uiLang === 'Portugues' ? 'Imprensa' : 'Press'}</a></span></div>
+<div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid '+C.BORDER }}>
+<div style={{ fontSize: '14px', fontWeight: 700, color: C.TEXT, marginBottom: '4px', textAlign: 'center' }}>{t.caseUseIntro}</div>
+<div style={{ display: showAllCases ? 'none' : 'block' }}>
+<div style={{ fontSize: '12.5px', color: C.TEXT2, textAlign: 'center', marginBottom: '14px' }}>{t.caseUseSub}</div>
+<div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxWidth: '460px', margin: '0 auto 16px' }}>
+{FEATURED_CASE_IDS.map(function(id) {var s = situaciones.filter(function(x) { return x.id === id; })[0];if (!s) return null;var entry = uiLang === 'English' ? s.en : s.es;var label = (entry.title || '').replace(' | EzWrite', '');return (<a key={id} href={'/'+entry.slug} style={{ fontSize: '13px', color: C.TEXT2, textDecoration: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 2px', borderBottom: '1px solid '+C.BORDER }}><span>{label}</span><span style={{ color: C.TEXT3 }}>→</span></a>);})}
+</div>
+<div style={{ textAlign: 'center' }}>
+<button onClick={function() { setShowAllCases(true); if (posthog) posthog.capture('case_uses_expanded'); }} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid '+C.ACCENT_BORDER, background: C.ACCENT_SOFT, color: C.ACCENT, fontSize: '12.5px', fontWeight: 600, fontFamily: inter.style.fontFamily, cursor: 'pointer' }}>{t.caseUseShowAll} ▾</button>
+</div>
+</div>
+<div style={{ display: showAllCases ? 'block' : 'none' }}>
+<div style={{ textAlign: 'center', marginBottom: '18px' }}>
+<button onClick={function() { setShowAllCases(false); }} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid '+C.ACCENT_BORDER, background: C.ACCENT_SOFT, color: C.ACCENT, fontSize: '12.5px', fontWeight: 600, fontFamily: inter.style.fontFamily, cursor: 'pointer' }}>{t.caseUseHide} ▴</button>
+</div>
+<div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px 32px', justifyContent: 'center' }}>
+{CASE_CATEGORIES.map(function(cat) {var items = situaciones.filter(function(s) { return s.category === cat.key; });if (!items.length) return null;return (<div key={cat.key} style={{ width: '280px' }}><div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '9px' }}><span style={{ width: '6px', height: '6px', borderRadius: '50%', background: C.ACCENT, display: 'inline-block' }}></span><span style={{ fontSize: '13px', fontWeight: 700, color: C.TEXT }}>{cat.label[uiLang] || cat.label.English}</span></div><div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>{items.map(function(s) {var entry = uiLang === 'English' ? s.en : s.es;var label = (entry.title || '').replace(' | EzWrite', '');return (<a key={s.id} href={'/'+entry.slug} style={{ fontSize: '12.5px', color: C.TEXT2, textDecoration: 'none', lineHeight: 1.4 }}>{label}</a>);})}</div></div>);})}
+</div>
+</div>
+</div>
+<div style={{ marginTop: '2.2rem', paddingTop: '1.5rem', borderTop: '1px solid '+C.BORDER, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: '8px', rowGap: '6px', fontSize: '12px', color: C.TEXT3 }}><span style={{ whiteSpace: 'nowrap' }}>Made with <span style={{ color: C.ACCENT, fontWeight: 700 }}>EzWrite</span></span><span style={{ whiteSpace: 'nowrap' }}><span style={{ opacity: 0.4, marginRight: '8px' }}>·</span>Powered by <span style={{ color: '#E86A2D', fontWeight: 600 }}>Claude</span></span><span style={{ whiteSpace: 'nowrap' }}><span style={{ opacity: 0.4, marginRight: '8px' }}>·</span><a href="/blog" style={{ color: C.TEXT3, textDecoration: 'underline' }}>Blog</a></span><span style={{ whiteSpace: 'nowrap' }}><span style={{ opacity: 0.4, marginRight: '8px' }}>·</span><a href="/privacidad" style={{ color: C.TEXT3, textDecoration: 'underline' }}>{uiLang === 'Espanol' ? 'Privacidad' : uiLang === 'Portugues' ? 'Privacidade' : 'Privacy'}</a></span><span style={{ whiteSpace: 'nowrap' }}><span style={{ opacity: 0.4, marginRight: '8px' }}>·</span><a href="/press" style={{ color: C.TEXT3, textDecoration: 'underline' }}>{uiLang === 'Espanol' ? 'Prensa' : uiLang === 'Portugues' ? 'Imprensa' : 'Press'}</a></span></div>
 <div style={{ marginTop: '0.9rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px' }}>
 <a href="https://instagram.com/ezwrite.app" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style={{ color: C.TEXT3, display: 'inline-flex', opacity: 0.75, transition: 'opacity .15s ease' }} onMouseEnter={function(e) { e.currentTarget.style.opacity = 1; }} onMouseLeave={function(e) { e.currentTarget.style.opacity = 0.75; }}>
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1.15" fill="currentColor" stroke="none"/></svg>
