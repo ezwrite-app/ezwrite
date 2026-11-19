@@ -111,6 +111,8 @@ limitMsg: 'You\'ve used your 5 free generations for this week. Upgrade to keep w
 limitBtnMonthlyLabel: 'Monthly',
 limitBtnAnnualLabel: 'Annual',
 perMonth: 'mo',
+upsellTitle: 'Like these? Go unlimited with Pro.',
+upsellLink: 'See plans',
 usageLeft: function(n) { return n + ' generation' + (n === 1 ? '' : 's') + ' left this week'; },
 shareMsg: 'Liked these versions? Invite 5 friends → 5 extra generations',
 shareBtn: '📲 Share EzWrite',
@@ -168,6 +170,8 @@ limitMsg: 'Usaste tus 5 generaciones gratuitas de esta semana. Suscribíte para 
 limitBtnMonthlyLabel: 'Mensual',
 limitBtnAnnualLabel: 'Anual',
 perMonth: 'mes',
+upsellTitle: '¿Te sirvieron? Con Pro generás sin límite.',
+upsellLink: 'Ver planes',
 usageLeft: function(n) { return n + (n === 1 ? ' generación restante' : ' generaciones restantes') + ' esta semana'; },
 shareMsg: '¿Te sirvieron estas versiones? Invitá 5 amigos → 5 generaciones extra',
 shareBtn: '📲 Compartir EzWrite',
@@ -225,6 +229,8 @@ limitMsg: 'Você usou suas 5 gerações gratuitas desta semana. Assine para cont
 limitBtnMonthlyLabel: 'Mensal',
 limitBtnAnnualLabel: 'Anual',
 perMonth: 'mês',
+upsellTitle: 'Gostou? Com o Pro você gera sem limite.',
+upsellLink: 'Ver planos',
 usageLeft: function(n) { return n + (n === 1 ? ' geração restante' : ' gerações restantes') + ' esta semana'; },
 shareMsg: 'Gostou dessas versões? Convide 5 amigos → 5 gerações extras',
 shareBtn: '📲 Compartilhar EzWrite',
@@ -538,6 +544,10 @@ var showPaywall = !isSubscribed && usageLeft <= 0;
 useEffect(function() {
 if (showPaywall && posthog) posthog.capture('pricing_viewed', { plan_tier: pricingTier });
 }, [showPaywall]);
+var showUpsellNudge = !!versions && !isSubscribed && usageLeft > 0;
+useEffect(function() {
+if (showUpsellNudge && posthog) posthog.capture('pricing_viewed', { plan_tier: pricingTier, source: 'post_generation_nudge' });
+}, [showUpsellNudge]);
 return (
 <div style={{ minHeight: '100vh', background: C.BG, fontFamily: inter.style.fontFamily, padding: '0 1rem', transition: 'background 0.2s ease' }}>
 <Head>
@@ -607,7 +617,7 @@ EzWrite
 </button>); })}
 </div>)}
 </div>)}
-{showInstallBanner && (<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: C.ACCENT_SOFT, border: '1px solid '+C.ACCENT, borderRadius: '10px', padding: '12px 14px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+{showInstallBanner && (versions || history.length > 0) && (<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: C.ACCENT_SOFT, border: '1px solid '+C.ACCENT, borderRadius: '10px', padding: '12px 14px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
 <span style={{ fontSize: '13px', color: C.TEXT, fontWeight: 500 }}>{t.installTitle}</span>
 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
 <button onClick={handleInstallClick} style={{ background: C.ACCENT, color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: inter.style.fontFamily }}>{isIos ? t.installBtnIos : t.installBtn}</button>
@@ -700,6 +710,7 @@ return (<button className="ez-collapsible-toggle" onClick={function() { setShowV
 {versions && (<div className="ph-no-capture"><div style={{ height: '1px', background: C.BORDER, margin: '2rem 0' }}></div>{versions.map(function(v, idx) { var color = VERSION_COLORS[idx] || C.ACCENT; var isCopied = copied === idx; return (<div key={idx} className="ez-card ez-result-card" style={{ background: C.SURFACE, border: '1px solid '+C.BORDER, borderLeft: '3px solid '+color, borderRadius: '14px', padding: '18px', marginBottom: '14px', boxShadow: C.SHADOW, animationDelay: (idx*80)+'ms' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}><span style={{ fontSize: '12px', fontWeight: 700, padding: '3px 8px', borderRadius: '4px', background: color+'22', color: color }}>{t.versionLabel} {v.label}</span><button className="ez-copy-btn" data-copied={isCopied} onClick={function() { handleCopy(v.text, idx); }} style={{ fontSize: '12px', fontWeight: 500, padding: '5px 12px', borderRadius: '6px', border: isCopied ? '1px solid '+C.GREEN : '1px solid '+C.BORDER, background: isCopied ? C.GREEN_LIGHT : 'transparent', cursor: 'pointer', color: isCopied ? C.GREEN : C.TEXT2, fontFamily: inter.style.fontFamily, display: 'flex', alignItems: 'center', gap: '4px' }}>{isCopied && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}{isCopied ? t.copied : t.copy}</button></div><p onCopy={function() { if (posthog) posthog.capture('result_copied', { version: idx + 1, method: 'manual_selection' }); }} style={{ fontSize: '15px', lineHeight: 1.7, color: isDark ? C.TEXT2 : C.TEXT, margin: 0, whiteSpace: 'pre-wrap' }}>{v.text}</p></div>); })}</div>)}
 {userId && versions && (<div className="ez-card" style={{ marginTop: '1.5rem', padding: '20px', borderRadius: '14px', background: C.ACCENT_SOFT, border: '1px solid '+C.ACCENT_BORDER, textAlign: 'center' }}><div style={{ fontSize: '13px', fontWeight: 600, color: C.TEXT, marginBottom: '6px' }}>{t.shareMsg}</div><div style={{ marginBottom: '14px' }}>{[0,1,2,3,4].map(function(i) { var filled = referralCount > 0 && (i < referralCount % 5 || (referralCount % 5 === 0 && i < 5)); return (<span key={i} style={{ fontSize: '22px', color: filled ? C.GREEN : C.TEXT3 }}>{filled ? '●' : '○'}</span>); })}<span style={{ fontSize: '12px', color: C.TEXT2, marginLeft: '10px' }}>{t.shareProgress(referralCount % 5 === 0 && referralCount > 0 ? 5 : referralCount % 5)}</span></div><div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}><button onClick={function() { var url = 'https://ezwrite.app?ref='+userId; var msg = 'Probá EzWrite gratis — la IA que te da 3 versiones pulidas de cualquier mensaje: ' + url; if (posthog) posthog.capture('referral_shared');
 window.open('https://wa.me/?text='+encodeURIComponent(msg), '_blank'); }} style={{ padding: '11px 28px', background: C.GREEN, color: '#fff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', fontFamily: inter.style.fontFamily, display: 'inline-flex', alignItems: 'center', gap: '8px' }}><svg width='16' height='16' viewBox='0 0 24 24' fill='white'><path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z'/></svg> {t.shareBtn}</button><button onClick={handleCopyLink} style={{ padding: '11px 20px', background: 'transparent', color: linkCopied ? C.GREEN : C.TEXT2, border: '1px solid '+(linkCopied ? C.GREEN : C.BORDER_STRONG), borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', fontFamily: inter.style.fontFamily, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>{linkCopied ? (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>) : (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>)} {linkCopied ? t.linkCopiedLabel : t.copyLinkBtn}</button></div>{bonusGen > 0 && (<div style={{ fontSize: '12px', color: C.GREEN, marginTop: '10px', fontWeight: 500 }}>+{bonusGen} {uiLang === 'Espanol' ? 'generaciones extra desbloqueadas' : uiLang === 'Portugues' ? 'gerações extras desbloqueadas' : 'extra generations unlocked'}</div>)}</div>)}
+{showUpsellNudge && (<div style={{ textAlign: 'center', marginTop: '14px' }}><span style={{ fontSize: '12.5px', color: C.TEXT3 }}>{t.upsellTitle}</span>{' '}<a href={`https://ezwrite.lemonsqueezy.com/checkout/buy/${CHECKOUT_IDS[pricingTier].monthly}${userId ? "?checkout%5Bcustom%5D%5Buser_id%5D=" + encodeURIComponent(userId) : ""}&checkout%5Bredirect_url%5D=https://ezwrite.app/?activated=1`} target="_blank" rel="noopener noreferrer" onClick={function() { if (posthog) posthog.capture('checkout_clicked', { plan: 'monthly', plan_tier: pricingTier, price: PRICES[pricingTier].monthly, source: 'post_generation_nudge' }); }} style={{ fontSize: '12.5px', color: C.ACCENT, fontWeight: 600, textDecoration: 'underline' }}>{t.upsellLink} →</a></div>)}
 <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid '+C.BORDER }}>
 <div style={{ fontSize: '14px', fontWeight: 700, color: C.TEXT, marginBottom: '4px', textAlign: 'center' }}>{t.caseUseIntro}</div>
 <div style={{ display: showAllCases ? 'none' : 'block' }}>
