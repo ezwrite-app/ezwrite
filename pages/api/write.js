@@ -119,7 +119,7 @@ try {
 
 var toneMap = {
 'Professional': 'professional yet approachable — clear and well-structured without being stiff or bureaucratic',
-'Diplomatic': 'diplomatic and tactful, careful with wording without being vague',
+'Diplomatic': 'diplomatic and tactful — softens disagreement and hedges before delivering pushback or bad news, without being vague or wishy-washy',
 'Empathetic': 'empathetic and warm — genuine and human, without being condescending, patronizing or overly effusive. Keep it brief and natural, like a real person would write it.',
 'Firm': 'firm and assertive, holding a clear position without being aggressive or cold'
 };
